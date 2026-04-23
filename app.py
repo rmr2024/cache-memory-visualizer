@@ -57,7 +57,7 @@ def get_theme_css(theme):
         section[data-testid="stSidebar"] {{
             background-color: {sidebar_bg} !important;
         }}
-        section[data-testid="stSidebar"] * {{
+        section[data-testid="stSidebar"] label {{
             color: {sidebar_text} !important;
         }}
         section[data-testid="stSidebar"] .stMarkdown {{
@@ -67,6 +67,29 @@ def get_theme_css(theme):
         section[data-testid="stSidebar"] h2, 
         section[data-testid="stSidebar"] h3 {{
             color: {heading_color} !important;
+        }}
+        section[data-testid="stSidebar"] input {{
+            background-color: {metric_bg} !important;
+            color: {text_color} !important;
+            border-color: {metric_border} !important;
+        }}
+        section[data-testid="stSidebar"] textarea {{
+            background-color: {metric_bg} !important;
+            color: {text_color} !important;
+            border-color: {metric_border} !important;
+        }}
+        section[data-testid="stSidebar"] select {{
+            background-color: {metric_bg} !important;
+            color: {text_color} !important;
+        }}
+        section[data-testid="stSidebar"] .stSelectbox label {{
+            color: {sidebar_text} !important;
+        }}
+        section[data-testid="stSidebar"] .stNumberInput label {{
+            color: {sidebar_text} !important;
+        }}
+        section[data-testid="stSidebar"] .stTextArea label {{
+            color: {sidebar_text} !important;
         }}
         .cache-cell {{
             padding: 20px 10px;
