@@ -24,19 +24,19 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .hit { 
-        background-color: #d4edda; 
-        border: 3px solid #28a745;
-        color: #155724;
+        background-color: #d4edda !important; 
+        border: 3px solid #28a745 !important;
+        color: #155724 !important;
     }
     .miss { 
-        background-color: #f8d7da; 
-        border: 3px solid #dc3545;
-        color: #721c24;
+        background-color: #f8d7da !important; 
+        border: 3px solid #dc3545 !important;
+        color: #721c24 !important;
     }
     .empty { 
-        background-color: #f8f9fa; 
-        border: 2px dashed #dee2e6;
-        color: #6c757d;
+        background-color: #f8f9fa !important; 
+        border: 2px dashed #dee2e6 !important;
+        color: #6c757d !important;
     }
     .formula-box {
         padding: 20px;
@@ -50,33 +50,50 @@ st.markdown("""
         font-weight: 500;
     }
     .stMetric {
-        background-color: #f8f9fa;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
+        background-color: #ffffff !important;
+        padding: 20px !important;
+        border-radius: 10px !important;
+        border: 2px solid #dee2e6 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     }
     .stMetric label {
         font-size: 18px !important;
         font-weight: 600 !important;
+        color: #495057 !important;
     }
     .stMetric [data-testid="stMetricValue"] {
-        font-size: 32px !important;
+        font-size: 36px !important;
         font-weight: 700 !important;
+        color: #212529 !important;
     }
-    h3 {
-        color: #1a1a1a;
-        font-weight: 700;
-        margin-top: 30px;
-        margin-bottom: 20px;
+    .stMetric [data-testid="stMetricDelta"] {
+        font-size: 16px !important;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        color: #212529 !important;
+        font-weight: 700 !important;
     }
     .set-label {
         font-size: 18px;
         font-weight: 700;
-        color: #495057;
+        color: #212529;
         margin: 20px 0 10px 0;
-        padding: 10px;
+        padding: 12px;
         background-color: #e9ecef;
         border-radius: 5px;
+        border: 2px solid #adb5bd;
+    }
+    .block-content {
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        color: inherit !important;
+        margin-top: 5px !important;
+    }
+    .block-label {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: inherit !important;
+        margin-bottom: 5px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -404,9 +421,15 @@ else:
                     if i in st.session_state.simulator.cache:
                         block_val = st.session_state.simulator.cache[i]
                         css_class = "hit" if i == cache_index and is_hit else "miss" if i == cache_index else "empty"
-                        st.markdown(f'<div class="cache-cell {css_class}"><div style="font-size:14px; margin-bottom:5px;">Index {i}</div><div style="font-size:20px; font-weight:700;">Block {block_val}</div></div>', unsafe_allow_html=True)
+                        st.markdown(f'''<div class="cache-cell {css_class}">
+                            <div class="block-label">Index {i}</div>
+                            <div class="block-content">Block {block_val}</div>
+                        </div>''', unsafe_allow_html=True)
                     else:
-                        st.markdown(f'<div class="cache-cell empty"><div style="font-size:14px; margin-bottom:5px;">Index {i}</div><div style="font-size:18px;">Empty</div></div>', unsafe_allow_html=True)
+                        st.markdown(f'''<div class="cache-cell empty">
+                            <div class="block-label">Index {i}</div>
+                            <div class="block-content">Empty</div>
+                        </div>''', unsafe_allow_html=True)
         
         elif mapping_type == "Fully Associative":
             num_cols = min(cache_size, 4)
@@ -416,9 +439,15 @@ else:
                     if i in st.session_state.simulator.cache:
                         block_val = st.session_state.simulator.cache[i]
                         css_class = "hit" if i == cache_index and is_hit else "miss" if i == cache_index else "empty"
-                        st.markdown(f'<div class="cache-cell {css_class}"><div style="font-size:14px; margin-bottom:5px;">Line {i}</div><div style="font-size:20px; font-weight:700;">Block {block_val}</div></div>', unsafe_allow_html=True)
+                        st.markdown(f'''<div class="cache-cell {css_class}">
+                            <div class="block-label">Line {i}</div>
+                            <div class="block-content">Block {block_val}</div>
+                        </div>''', unsafe_allow_html=True)
                     else:
-                        st.markdown(f'<div class="cache-cell empty"><div style="font-size:14px; margin-bottom:5px;">Line {i}</div><div style="font-size:18px;">Empty</div></div>', unsafe_allow_html=True)
+                        st.markdown(f'''<div class="cache-cell empty">
+                            <div class="block-label">Line {i}</div>
+                            <div class="block-content">Empty</div>
+                        </div>''', unsafe_allow_html=True)
         
         else:  # Set Associative
             for set_idx in range(num_sets):
@@ -430,9 +459,15 @@ else:
                             block_val = st.session_state.simulator.sets[set_idx][line]
                             global_idx = set_idx * (cache_size // num_sets) + line
                             css_class = "hit" if global_idx == cache_index and is_hit else "miss" if global_idx == cache_index else "empty"
-                            st.markdown(f'<div class="cache-cell {css_class}"><div style="font-size:14px; margin-bottom:5px;">Line {line}</div><div style="font-size:20px; font-weight:700;">Block {block_val}</div></div>', unsafe_allow_html=True)
+                            st.markdown(f'''<div class="cache-cell {css_class}">
+                                <div class="block-label">Line {line}</div>
+                                <div class="block-content">Block {block_val}</div>
+                            </div>''', unsafe_allow_html=True)
                         else:
-                            st.markdown(f'<div class="cache-cell empty"><div style="font-size:14px; margin-bottom:5px;">Line {line}</div><div style="font-size:18px;">Empty</div></div>', unsafe_allow_html=True)
+                            st.markdown(f'''<div class="cache-cell empty">
+                                <div class="block-label">Line {line}</div>
+                                <div class="block-content">Empty</div>
+                            </div>''', unsafe_allow_html=True)
         
         # Auto-advance for Auto-Run mode
         if st.session_state.animation_mode == "Auto-Run":
