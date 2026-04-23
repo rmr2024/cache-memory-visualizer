@@ -6,6 +6,22 @@ from typing import List, Tuple, Dict
 # Page config
 st.set_page_config(page_title="Cache Memory Visualizer", layout="wide", initial_sidebar_state="expanded")
 
+# Initialize session state first
+if 'simulator' not in st.session_state:
+    st.session_state.simulator = None
+if 'current_step' not in st.session_state:
+    st.session_state.current_step = 0
+if 'sequence' not in st.session_state:
+    st.session_state.sequence = []
+if 'running' not in st.session_state:
+    st.session_state.running = False
+if 'animation_mode' not in st.session_state:
+    st.session_state.animation_mode = "Auto-Run"
+if 'step_processed' not in st.session_state:
+    st.session_state.step_processed = False
+if 'theme' not in st.session_state:
+    st.session_state.theme = "Light"
+
 # Custom CSS
 def get_theme_css(theme):
     if theme == "Dark":
@@ -269,22 +285,6 @@ class SetAssociativeCache(CacheSimulator):
         cache_index = set_index * self.lines_per_set + list(self.sets[set_index].keys())[list(self.sets[set_index].values()).index(block)]
         self.access_history.append((block, is_hit, cache_index))
         return is_hit, cache_index, explanation
-
-# Initialize session state
-if 'simulator' not in st.session_state:
-    st.session_state.simulator = None
-if 'current_step' not in st.session_state:
-    st.session_state.current_step = 0
-if 'sequence' not in st.session_state:
-    st.session_state.sequence = []
-if 'running' not in st.session_state:
-    st.session_state.running = False
-if 'animation_mode' not in st.session_state:
-    st.session_state.animation_mode = "Auto-Run"
-if 'step_processed' not in st.session_state:
-    st.session_state.step_processed = False
-if 'theme' not in st.session_state:
-    st.session_state.theme = "Light"
 
 # Title
 st.title("Cache Memory Visualizer")
