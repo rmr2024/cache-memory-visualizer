@@ -7,96 +7,126 @@ from typing import List, Tuple, Dict
 st.set_page_config(page_title="Cache Memory Visualizer", layout="wide", initial_sidebar_state="expanded")
 
 # Custom CSS
-st.markdown("""
-<style>
-    .cache-cell {
-        padding: 20px 10px;
-        border-radius: 8px;
-        text-align: center;
-        margin: 8px 2px;
-        font-weight: 600;
-        font-size: 16px;
-        min-height: 80px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .hit { 
-        background-color: #d4edda !important; 
-        border: 3px solid #28a745 !important;
-        color: #155724 !important;
-    }
-    .miss { 
-        background-color: #f8d7da !important; 
-        border: 3px solid #dc3545 !important;
-        color: #721c24 !important;
-    }
-    .empty { 
-        background-color: #f8f9fa !important; 
-        border: 2px dashed #dee2e6 !important;
-        color: #6c757d !important;
-    }
-    .formula-box {
-        padding: 20px;
-        background-color: #e7f3ff;
-        border-left: 5px solid #2196F3;
-        border-radius: 8px;
-        margin: 15px 0;
-        font-size: 16px;
-        line-height: 1.8;
-        color: #0d47a1;
-        font-weight: 500;
-    }
-    .stMetric {
-        background-color: #ffffff !important;
-        padding: 20px !important;
-        border-radius: 10px !important;
-        border: 2px solid #dee2e6 !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-    }
-    .stMetric label {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-        color: #495057 !important;
-    }
-    .stMetric [data-testid="stMetricValue"] {
-        font-size: 36px !important;
-        font-weight: 700 !important;
-        color: #212529 !important;
-    }
-    .stMetric [data-testid="stMetricDelta"] {
-        font-size: 16px !important;
-    }
-    h1, h2, h3, h4, h5, h6 {
-        color: #212529 !important;
-        font-weight: 700 !important;
-    }
-    .set-label {
-        font-size: 18px;
-        font-weight: 700;
-        color: #212529;
-        margin: 20px 0 10px 0;
-        padding: 12px;
-        background-color: #e9ecef;
-        border-radius: 5px;
-        border: 2px solid #adb5bd;
-    }
-    .block-content {
-        font-size: 20px !important;
-        font-weight: 700 !important;
-        color: inherit !important;
-        margin-top: 5px !important;
-    }
-    .block-label {
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        color: inherit !important;
-        margin-bottom: 5px !important;
-    }
-</style>
-""", unsafe_allow_html=True)
+def get_theme_css(theme):
+    if theme == "Dark":
+        bg_color = "#0e1117"
+        text_color = "#fafafa"
+        heading_color = "#ffffff"
+        metric_bg = "#262730"
+        metric_border = "#4a4a4a"
+        formula_bg = "#1e3a5f"
+        formula_text = "#a8d5ff"
+        set_label_bg = "#262730"
+        set_label_border = "#4a4a4a"
+    else:  # Light
+        bg_color = "#ffffff"
+        text_color = "#262730"
+        heading_color = "#262730"
+        metric_bg = "#ffffff"
+        metric_border = "#dee2e6"
+        formula_bg = "#e7f3ff"
+        formula_text = "#0d47a1"
+        set_label_bg = "#e9ecef"
+        set_label_border = "#adb5bd"
+    
+    return f"""
+    <style>
+        .stApp {{
+            background-color: {bg_color} !important;
+        }}
+        .cache-cell {{
+            padding: 20px 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 8px 2px;
+            font-weight: 600;
+            font-size: 16px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }}
+        .hit {{ 
+            background-color: #d4edda !important; 
+            border: 3px solid #28a745 !important;
+            color: #155724 !important;
+        }}
+        .miss {{ 
+            background-color: #f8d7da !important; 
+            border: 3px solid #dc3545 !important;
+            color: #721c24 !important;
+        }}
+        .empty {{ 
+            background-color: #f8f9fa !important; 
+            border: 2px dashed #dee2e6 !important;
+            color: #6c757d !important;
+        }}
+        .formula-box {{
+            padding: 20px;
+            background-color: {formula_bg};
+            border-left: 5px solid #2196F3;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 16px;
+            line-height: 1.8;
+            color: {formula_text};
+            font-weight: 500;
+        }}
+        .stMetric {{
+            background-color: {metric_bg} !important;
+            padding: 20px !important;
+            border-radius: 10px !important;
+            border: 2px solid {metric_border} !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        }}
+        .stMetric label {{
+            font-size: 18px !important;
+            font-weight: 600 !important;
+            color: {text_color} !important;
+        }}
+        .stMetric [data-testid="stMetricValue"] {{
+            font-size: 36px !important;
+            font-weight: 700 !important;
+            color: {heading_color} !important;
+        }}
+        .stMetric [data-testid="stMetricDelta"] {{
+            font-size: 16px !important;
+        }}
+        h1, h2, h3, h4, h5, h6 {{
+            color: {heading_color} !important;
+            font-weight: 700 !important;
+        }}
+        p, span, div {{
+            color: {text_color} !important;
+        }}
+        .set-label {{
+            font-size: 18px;
+            font-weight: 700;
+            color: {heading_color} !important;
+            margin: 20px 0 10px 0;
+            padding: 12px;
+            background-color: {set_label_bg};
+            border-radius: 5px;
+            border: 2px solid {set_label_border};
+        }}
+        .block-content {{
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            color: inherit !important;
+            margin-top: 5px !important;
+        }}
+        .block-label {{
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            color: inherit !important;
+            margin-bottom: 5px !important;
+        }}
+    </style>
+    """
+
+st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
 
 # Cache Classes
 class CacheSimulator:
@@ -253,6 +283,8 @@ if 'animation_mode' not in st.session_state:
     st.session_state.animation_mode = "Auto-Run"
 if 'step_processed' not in st.session_state:
     st.session_state.step_processed = False
+if 'theme' not in st.session_state:
+    st.session_state.theme = "Light"
 
 # Title
 st.title("Cache Memory Visualizer")
@@ -261,6 +293,21 @@ st.markdown("*Interactive Learning Tool for Computer Organization & Architecture
 # Sidebar
 with st.sidebar:
     st.header("Configuration")
+    
+    # Theme toggle
+    theme_col1, theme_col2 = st.columns([3, 1])
+    with theme_col1:
+        theme = st.selectbox("Theme", ["Light", "Dark"], index=0 if st.session_state.theme == "Light" else 1, label_visibility="collapsed")
+    with theme_col2:
+        if st.button("🌓"):
+            st.session_state.theme = "Dark" if st.session_state.theme == "Light" else "Light"
+            st.rerun()
+    
+    if theme != st.session_state.theme:
+        st.session_state.theme = theme
+        st.rerun()
+    
+    st.markdown("---")
     
     mapping_type = st.selectbox(
         "Mapping Type",
