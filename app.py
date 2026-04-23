@@ -279,7 +279,16 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("🎮 Controls")
     
-    speed = st.slider("Animation Speed (seconds)", 0.1, 2.0, 0.5, 0.1)
+    animation_mode = st.radio(
+        "Animation Mode",
+        ["Auto-Run", "Step-by-Step"],
+        horizontal=True
+    )
+    
+    if animation_mode == "Auto-Run":
+        speed = st.slider("Animation Speed (seconds)", 0.1, 2.0, 0.5, 0.1)
+    else:
+        speed = 0
     
     col1, col2 = st.columns(2)
     with col1:
@@ -295,7 +304,8 @@ with st.sidebar:
                     st.session_state.simulator = SetAssociativeCache(cache_size, num_sets, replacement_policy)
                 
                 st.session_state.current_step = 0
-                st.session_state.running = True
+                st.session_state.running = animation_mode == "Auto-Run"
+                st.session_state.animation_mode = animation_mode
                 st.rerun()
             except:
                 st.error("Invalid sequence format")
@@ -308,9 +318,10 @@ with st.sidebar:
             st.rerun()
     
     if st.session_state.simulator and st.session_state.current_step < len(st.session_state.sequence):
-        if st.button("⏭️ Next Step", use_container_width=True):
-            st.session_state.current_step += 1
-            st.rerun()
+        if st.session_state.get('animation_mode') == "Step-by-Step":
+            if st.button("⏭️ Next Step", use_container_width=True, type="primary"):
+                st.session_state.current_step += 1
+                st.rerun()
 
 # Main area
 if st.session_state.simulator is None:
@@ -417,15 +428,16 @@ else:
                             st.markdown(f'<div class="cache-cell empty"><div style="font-size:14px; margin-bottom:5px;">Line {line}</div><div style="font-size:18px;">Empty</div></div>', unsafe_allow_html=True)
         
         # Auto-advance
-        time.sleep(speed)
-        st.session_state.current_step += 1
-        
-        if st.session_state.current_step < len(st.session_state.sequence):
-            st.rerun()
-        else:
-            st.session_state.running = False
-            st.success("✅ Simulation Complete!")
-            st.balloons()
+        if st.session_state.get('animation_mode') == "Auto-Run":
+            time.sleep(speed)
+            st.session_state.current_step += 1
+            
+            if st.session_state.current_step < len(st.session_state.sequence):
+                st.rerun()
+            else:
+                st.session_state.running = False
+                st.success("✅ Simulation Complete!")
+                st.balloons()
     
     elif st.session_state.current_step >= len(st.session_state.sequence):
         st.success("✅ Simulation Complete!")
