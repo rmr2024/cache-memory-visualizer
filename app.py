@@ -232,14 +232,18 @@ if 'sequence' not in st.session_state:
     st.session_state.sequence = []
 if 'running' not in st.session_state:
     st.session_state.running = False
+if 'animation_mode' not in st.session_state:
+    st.session_state.animation_mode = "Auto-Run"
+if 'step_processed' not in st.session_state:
+    st.session_state.step_processed = False
 
 # Title
-st.title("🧠 Cache Memory Visualizer")
+st.title("Cache Memory Visualizer")
 st.markdown("*Interactive Learning Tool for Computer Organization & Architecture*")
 
 # Sidebar
 with st.sidebar:
-    st.header("⚙️ Configuration")
+    st.header("Configuration")
     
     mapping_type = st.selectbox(
         "Mapping Type",
@@ -259,14 +263,14 @@ with st.sidebar:
     ) if mapping_type != "Direct Mapping" else "N/A"
     
     st.markdown("---")
-    st.subheader("📝 Memory Access Sequence")
+    st.subheader("Memory Access Sequence")
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("📋 Example 1"):
+        if st.button("Example 1"):
             st.session_state.sequence_input = "1,2,3,4,1,2,5,1,2,3,4,5"
     with col2:
-        if st.button("🎲 Random"):
+        if st.button("Random"):
             st.session_state.sequence_input = ",".join([str(random.randint(0, 15)) for _ in range(12)])
     
     sequence_input = st.text_area(
@@ -277,7 +281,7 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    st.subheader("🎮 Controls")
+    st.subheader("Controls")
     
     animation_mode = st.radio(
         "Animation Mode",
@@ -292,7 +296,7 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("▶️ Start", use_container_width=True):
+        if st.button("Start", use_container_width=True):
             try:
                 st.session_state.sequence = [int(x.strip()) for x in sequence_input.split(",") if x.strip()]
                 
@@ -306,29 +310,31 @@ with st.sidebar:
                 st.session_state.current_step = 0
                 st.session_state.running = animation_mode == "Auto-Run"
                 st.session_state.animation_mode = animation_mode
+                st.session_state.step_processed = False
                 st.rerun()
             except:
                 st.error("Invalid sequence format")
     
     with col2:
-        if st.button("🔄 Reset", use_container_width=True):
+        if st.button("Reset", use_container_width=True):
             st.session_state.simulator = None
             st.session_state.current_step = 0
             st.session_state.running = False
+            st.session_state.step_processed = False
             st.rerun()
     
     if st.session_state.simulator and st.session_state.current_step < len(st.session_state.sequence):
-        if st.session_state.get('animation_mode') == "Step-by-Step":
-            if st.button("⏭️ Next Step", use_container_width=True, type="primary"):
-                st.session_state.current_step += 1
+        if st.session_state.animation_mode == "Step-by-Step":
+            if st.button("Next Step", use_container_width=True, type="primary"):
+                st.session_state.step_processed = False
                 st.rerun()
 
 # Main area
 if st.session_state.simulator is None:
-    st.info("👈 Configure settings and click **Start** to begin simulation")
+    st.info("Configure settings in the sidebar and click Start to begin simulation")
     
     # Educational content
-    st.markdown("### 📚 Cache Mapping Techniques")
+    st.markdown("### Cache Mapping Techniques")
     
     col1, col2, col3 = st.columns(3)
     
@@ -376,18 +382,19 @@ else:
     st.markdown("---")
     
     # Process current step
-    if st.session_state.running and st.session_state.current_step < len(st.session_state.sequence):
+    if st.session_state.current_step < len(st.session_state.sequence) and not st.session_state.step_processed:
         block = st.session_state.sequence[st.session_state.current_step]
         is_hit, cache_index, explanation = st.session_state.simulator.access(block)
+        st.session_state.step_processed = True
         
         # Show current access
-        st.markdown(f"### 🎯 Step {st.session_state.current_step + 1}: Accessing Block **{block}**")
+        st.markdown(f"### Step {st.session_state.current_step + 1}: Accessing Block **{block}**")
         
         # Explanation
         st.markdown(f'<div class="formula-box">{explanation.replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
         
         # Visualize cache
-        st.markdown("### 💾 Cache State")
+        st.markdown("### Cache State")
         
         if mapping_type == "Direct Mapping":
             num_cols = min(cache_size, 4)
@@ -415,7 +422,7 @@ else:
         
         else:  # Set Associative
             for set_idx in range(num_sets):
-                st.markdown(f'<div class="set-label">📦 Set {set_idx}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="set-label">Set {set_idx}</div>', unsafe_allow_html=True)
                 cols = st.columns(cache_size // num_sets)
                 for line in range(cache_size // num_sets):
                     with cols[line]:
@@ -427,23 +434,27 @@ else:
                         else:
                             st.markdown(f'<div class="cache-cell empty"><div style="font-size:14px; margin-bottom:5px;">Line {line}</div><div style="font-size:18px;">Empty</div></div>', unsafe_allow_html=True)
         
-        # Auto-advance
-        if st.session_state.get('animation_mode') == "Auto-Run":
+        # Auto-advance for Auto-Run mode
+        if st.session_state.animation_mode == "Auto-Run":
             time.sleep(speed)
             st.session_state.current_step += 1
+            st.session_state.step_processed = False
             
             if st.session_state.current_step < len(st.session_state.sequence):
                 st.rerun()
             else:
                 st.session_state.running = False
-                st.success("✅ Simulation Complete!")
+                st.success("Simulation Complete!")
                 st.balloons()
+        else:
+            # Step-by-step mode - increment after display
+            st.session_state.current_step += 1
     
     elif st.session_state.current_step >= len(st.session_state.sequence):
-        st.success("✅ Simulation Complete!")
+        st.success("Simulation Complete!")
         
         # Final stats
-        st.markdown("### 📊 Final Statistics")
+        st.markdown("### Final Statistics")
         col1, col2 = st.columns(2)
         with col1:
             st.metric("Total Hits", st.session_state.simulator.hits)
