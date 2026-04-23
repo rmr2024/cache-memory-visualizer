@@ -422,7 +422,7 @@ st.markdown("*Interactive Learning Tool for Computer Organization & Architecture
 
 # Sidebar
 with st.sidebar:
-    st.header("Configuration")
+    st.header("⚙️ Configuration")
     
     # Theme toggle
     theme_col1, theme_col2 = st.columns([3, 1])
@@ -457,14 +457,14 @@ with st.sidebar:
     ) if mapping_type != "Direct Mapping" else "N/A"
     
     st.markdown("---")
-    st.subheader("Memory Access Sequence")
+    st.subheader("📝 Memory Access Sequence")
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Example 1"):
+        if st.button("📋 Example 1"):
             st.session_state.sequence_input = "1,2,3,4,1,2,5,1,2,3,4,5"
     with col2:
-        if st.button("Random"):
+        if st.button("🎲 Random"):
             st.session_state.sequence_input = ",".join([str(random.randint(0, 15)) for _ in range(12)])
     
     sequence_input = st.text_area(
@@ -475,7 +475,7 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    st.subheader("Controls")
+    st.subheader("🎮 Controls")
     
     animation_mode = st.radio(
         "Animation Mode",
@@ -490,7 +490,7 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Start", use_container_width=True):
+        if st.button("▶️ Start", use_container_width=True):
             try:
                 st.session_state.sequence = [int(x.strip()) for x in sequence_input.split(",") if x.strip()]
                 
@@ -510,7 +510,7 @@ with st.sidebar:
                 st.error("Invalid sequence format")
     
     with col2:
-        if st.button("Reset", use_container_width=True):
+        if st.button("🔄 Reset", use_container_width=True):
             st.session_state.simulator = None
             st.session_state.current_step = 0
             st.session_state.running = False
@@ -519,7 +519,7 @@ with st.sidebar:
     
     if st.session_state.simulator and st.session_state.current_step < len(st.session_state.sequence):
         if st.session_state.animation_mode == "Step-by-Step":
-            if st.button("Next Step", use_container_width=True, type="primary"):
+            if st.button("⏭️ Next Step", use_container_width=True, type="primary"):
                 st.session_state.step_processed = False
                 st.rerun()
 
