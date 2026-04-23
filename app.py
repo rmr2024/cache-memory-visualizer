@@ -4,9 +4,9 @@ import random
 from typing import List, Tuple, Dict
 
 # Page config
-st.set_page_config(page_title="Cache Memory Visualizer", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Cache Memory Visualizer", layout="wide", initial_sidebar_state="expanded")
 
-# Initialize session state
+# Initialize session state first
 if 'simulator' not in st.session_state:
     st.session_state.simulator = None
 if 'current_step' not in st.session_state:
@@ -21,173 +21,123 @@ if 'step_processed' not in st.session_state:
     st.session_state.step_processed = False
 if 'theme' not in st.session_state:
     st.session_state.theme = "Light"
-if 'sequence_input' not in st.session_state:
-    st.session_state.sequence_input = "1,2,3,4,1,2,5,1,2,3,4,5"
 
 # Custom CSS
 def get_theme_css(theme):
     if theme == "Dark":
         bg_color = "#0e1117"
-        card_bg = "#1e1e1e"
         text_color = "#fafafa"
         heading_color = "#ffffff"
-        border_color = "#333333"
+        metric_bg = "#262730"
+        metric_border = "#4a4a4a"
         formula_bg = "#1e3a5f"
         formula_text = "#a8d5ff"
-    else:
-        bg_color = "#f5f7fa"
-        card_bg = "#ffffff"
-        text_color = "#2c3e50"
-        heading_color = "#1a202c"
-        border_color = "#e2e8f0"
-        formula_bg = "#ebf8ff"
-        formula_text = "#2c5282"
+        set_label_bg = "#262730"
+        set_label_border = "#4a4a4a"
+    else:  # Light
+        bg_color = "#ffffff"
+        text_color = "#262730"
+        heading_color = "#262730"
+        metric_bg = "#ffffff"
+        metric_border = "#dee2e6"
+        formula_bg = "#e7f3ff"
+        formula_text = "#0d47a1"
+        set_label_bg = "#e9ecef"
+        set_label_border = "#adb5bd"
     
     return f"""
     <style>
         .stApp {{
             background-color: {bg_color} !important;
         }}
-        .card {{
-            background-color: {card_bg};
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border: 1px solid {border_color};
-            margin-bottom: 20px;
-        }}
-        .stat-card {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
-            color: white;
-            box-shadow: 0 8px 16px rgba(102,126,234,0.4);
-        }}
-        .stat-card h3 {{
-            color: white !important;
-            font-size: 16px;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-        }}
-        .stat-card .value {{
-            color: white !important;
-            font-size: 36px;
-            font-weight: 700;
-            margin: 0;
-        }}
         .cache-cell {{
-            background-color: {card_bg};
-            border: 3px solid {border_color};
-            border-radius: 12px;
-            padding: 16px 12px;
+            padding: 20px 10px;
+            border-radius: 8px;
             text-align: center;
-            margin: 6px;
-            min-height: 90px;
+            margin: 8px 2px;
+            font-weight: 600;
+            font-size: 16px;
+            min-height: 80px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }}
-        .cache-cell:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }}
-        .hit {{
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%) !important;
+        .hit {{ 
+            background-color: #d4edda !important; 
             border: 3px solid #28a745 !important;
             color: #155724 !important;
-            animation: pulse 0.5s ease;
         }}
-        .miss {{
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%) !important;
+        .miss {{ 
+            background-color: #f8d7da !important; 
             border: 3px solid #dc3545 !important;
             color: #721c24 !important;
-            animation: shake 0.5s ease;
         }}
-        .empty {{
-            background-color: {card_bg} !important;
-            border: 2px dashed {border_color} !important;
+        .empty {{ 
+            background-color: #f8f9fa !important; 
+            border: 2px dashed #dee2e6 !important;
             color: #6c757d !important;
         }}
-        @keyframes pulse {{
-            0%, 100% {{ transform: scale(1); }}
-            50% {{ transform: scale(1.05); }}
-        }}
-        @keyframes shake {{
-            0%, 100% {{ transform: translateX(0); }}
-            25% {{ transform: translateX(-5px); }}
-            75% {{ transform: translateX(5px); }}
-        }}
-        .sequence-block {{
-            display: inline-block;
-            background-color: {card_bg};
-            border: 2px solid {border_color};
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin: 4px;
-            font-weight: 600;
-            font-size: 18px;
-            color: {text_color};
-            transition: all 0.3s ease;
-        }}
-        .sequence-block.active {{
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border: 3px solid #f39c12;
-            color: #000;
-            transform: scale(1.15);
-            box-shadow: 0 4px 12px rgba(243,156,18,0.5);
-        }}
-        .sequence-block.processed {{
-            opacity: 0.5;
-        }}
-        .explanation-box {{
-            background-color: {formula_bg};
-            border-left: 5px solid #3498db;
-            border-radius: 12px;
+        .formula-box {{
             padding: 20px;
-            margin: 20px 0;
+            background-color: {formula_bg};
+            border-left: 5px solid #2196F3;
+            border-radius: 8px;
+            margin: 15px 0;
             font-size: 16px;
             line-height: 1.8;
             color: {formula_text};
             font-weight: 500;
-            box-shadow: 0 2px 8px rgba(52,152,219,0.2);
         }}
-        .block-label {{
-            font-size: 13px;
-            font-weight: 600;
-            color: inherit;
-            margin-bottom: 6px;
-            opacity: 0.8;
+        .stMetric {{
+            background-color: {metric_bg} !important;
+            padding: 20px !important;
+            border-radius: 10px !important;
+            border: 2px solid {metric_border} !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
         }}
-        .block-content {{
-            font-size: 22px;
-            font-weight: 700;
-            color: inherit;
+        .stMetric label {{
+            font-size: 18px !important;
+            font-weight: 600 !important;
+            color: {text_color} !important;
         }}
-        h1, h2, h3 {{
+        .stMetric [data-testid="stMetricValue"] {{
+            font-size: 36px !important;
+            font-weight: 700 !important;
             color: {heading_color} !important;
         }}
-        .stButton>button {{
-            border-radius: 8px;
-            font-weight: 600;
-            padding: 8px 24px;
-            transition: all 0.3s ease;
+        .stMetric [data-testid="stMetricDelta"] {{
+            font-size: 16px !important;
         }}
-        .stButton>button:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        h1, h2, h3, h4, h5, h6 {{
+            color: {heading_color} !important;
+            font-weight: 700 !important;
         }}
-        .set-header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white !important;
-            padding: 12px 20px;
-            border-radius: 10px;
+        p, span, div {{
+            color: {text_color} !important;
+        }}
+        .set-label {{
+            font-size: 18px;
             font-weight: 700;
-            font-size: 16px;
-            margin: 16px 0 12px 0;
-            text-align: center;
+            color: {heading_color} !important;
+            margin: 20px 0 10px 0;
+            padding: 12px;
+            background-color: {set_label_bg};
+            border-radius: 5px;
+            border: 2px solid {set_label_border};
+        }}
+        .block-content {{
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            color: inherit !important;
+            margin-top: 5px !important;
+        }}
+        .block-label {{
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            color: inherit !important;
+            margin-bottom: 5px !important;
         }}
     </style>
     """
@@ -203,6 +153,12 @@ class CacheSimulator:
         self.hits = 0
         self.misses = 0
         self.access_history = []
+        
+    def reset(self):
+        self.cache = {}
+        self.hits = 0
+        self.misses = 0
+        self.access_history = []
 
 class DirectMappedCache(CacheSimulator):
     def access(self, block: int) -> Tuple[bool, int, str]:
@@ -213,15 +169,15 @@ class DirectMappedCache(CacheSimulator):
         
         if is_hit:
             self.hits += 1
-            explanation += f"<br>✓ <b>HIT</b>: Cache[{index}] contains Block {block}"
+            explanation += f"\n✓ HIT: Cache[{index}] contains Block {block}"
         else:
             self.misses += 1
             old_block = self.cache.get(index, None)
             self.cache[index] = block
             if old_block is not None:
-                explanation += f"<br>✗ <b>MISS</b>: Cache[{index}] had Block {old_block}, replaced with Block {block}"
+                explanation += f"\n✗ MISS: Cache[{index}] had Block {old_block}, replaced with Block {block}"
             else:
-                explanation += f"<br>✗ <b>MISS</b>: Cache[{index}] was empty, loaded Block {block}"
+                explanation += f"\n✗ MISS: Cache[{index}] was empty, loaded Block {block}"
         
         self.access_history.append((block, is_hit, index))
         return is_hit, index, explanation
@@ -240,7 +196,7 @@ class FullyAssociativeCache(CacheSimulator):
         if is_hit:
             self.hits += 1
             index = [k for k, v in self.cache.items() if v == block][0]
-            explanation += f"<br>✓ <b>HIT</b>: Found at Cache[{index}]"
+            explanation += f"\n✓ HIT: Found at Cache[{index}]"
             
             if self.replacement_policy == "LRU":
                 self.lru_counter[index] = self.access_count
@@ -251,18 +207,18 @@ class FullyAssociativeCache(CacheSimulator):
             if len(self.cache) < self.cache_size:
                 index = len(self.cache)
                 self.cache[index] = block
-                explanation += f"<br>✗ <b>MISS</b>: Loaded into Cache[{index}]"
+                explanation += f"\n✗ MISS: Loaded into Cache[{index}]"
             else:
                 if self.replacement_policy == "FIFO":
                     index = self.queue.pop(0)
                     old_block = self.cache[index]
                     self.cache[index] = block
-                    explanation += f"<br>✗ <b>MISS</b>: FIFO replaced Block {old_block} at Cache[{index}]"
-                else:
+                    explanation += f"\n✗ MISS: FIFO replaced Block {old_block} at Cache[{index}] with Block {block}"
+                else:  # LRU
                     index = min(self.lru_counter, key=self.lru_counter.get)
                     old_block = self.cache[index]
                     self.cache[index] = block
-                    explanation += f"<br>✗ <b>MISS</b>: LRU replaced Block {old_block} at Cache[{index}]"
+                    explanation += f"\n✗ MISS: LRU replaced Block {old_block} at Cache[{index}] with Block {block}"
             
             if self.replacement_policy == "FIFO":
                 self.queue.append(index)
@@ -293,7 +249,7 @@ class SetAssociativeCache(CacheSimulator):
             self.hits += 1
             line = [k for k, v in self.sets[set_index].items() if v == block][0]
             cache_index = set_index * self.lines_per_set + line
-            explanation += f"<br>✓ <b>HIT</b>: Found in Set {set_index}, Line {line}"
+            explanation += f"\n✓ HIT: Found in Set {set_index}, Line {line}"
             
             if self.replacement_policy == "LRU":
                 self.lru_counter[set_index][line] = self.access_count
@@ -305,20 +261,20 @@ class SetAssociativeCache(CacheSimulator):
                 line = len(self.sets[set_index])
                 self.sets[set_index][line] = block
                 cache_index = set_index * self.lines_per_set + line
-                explanation += f"<br>✗ <b>MISS</b>: Loaded into Set {set_index}, Line {line}"
+                explanation += f"\n✗ MISS: Loaded into Set {set_index}, Line {line}"
             else:
                 if self.replacement_policy == "FIFO":
                     line = self.queue[set_index].pop(0)
                     old_block = self.sets[set_index][line]
                     self.sets[set_index][line] = block
                     cache_index = set_index * self.lines_per_set + line
-                    explanation += f"<br>✗ <b>MISS</b>: FIFO replaced Block {old_block} in Set {set_index}, Line {line}"
-                else:
+                    explanation += f"\n✗ MISS: FIFO replaced Block {old_block} in Set {set_index}, Line {line}"
+                else:  # LRU
                     line = min(self.lru_counter[set_index], key=self.lru_counter[set_index].get)
                     old_block = self.sets[set_index][line]
                     self.sets[set_index][line] = block
                     cache_index = set_index * self.lines_per_set + line
-                    explanation += f"<br>✗ <b>MISS</b>: LRU replaced Block {old_block} in Set {set_index}, Line {line}"
+                    explanation += f"\n✗ MISS: LRU replaced Block {old_block} in Set {set_index}, Line {line}"
             
             if self.replacement_policy == "FIFO":
                 self.queue[set_index].append(line)
@@ -331,173 +287,163 @@ class SetAssociativeCache(CacheSimulator):
         return is_hit, cache_index, explanation
 
 # Title
-st.markdown(f"<h1 style='text-align: center; margin-bottom: 10px;'>Cache Memory Visualizer</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align: center; color: #7f8c8d; margin-bottom: 30px;'>Interactive Learning Tool for Computer Organization & Architecture</p>", unsafe_allow_html=True)
+st.title("Cache Memory Visualizer")
+st.markdown("*Interactive Learning Tool for Computer Organization & Architecture*")
 
-# Controls Card
-st.markdown('<div class="card">', unsafe_allow_html=True)
-
-col1, col2, col3, col4, col5 = st.columns([1.5, 1, 1.2, 1, 1])
-
-with col1:
-    mapping_type = st.selectbox("Mapping Type", ["Direct Mapping", "Fully Associative", "Set Associative"])
-
-with col2:
-    cache_size = st.number_input("Cache Size", min_value=2, max_value=32, value=8, step=1)
-
-with col3:
-    if mapping_type == "Set Associative":
-        num_sets = st.number_input("Number of Sets", min_value=2, max_value=cache_size//2, value=4, step=1)
-    else:
-        num_sets = None
-        st.markdown("<div style='height: 58px;'></div>", unsafe_allow_html=True)
-
-with col4:
-    replacement_policy = st.selectbox("Policy", ["FIFO", "LRU"]) if mapping_type != "Direct Mapping" else "N/A"
-    if mapping_type == "Direct Mapping":
-        st.markdown("<div style='height: 58px;'></div>", unsafe_allow_html=True)
-
-with col5:
-    theme = st.selectbox("Theme", ["Light", "Dark"], index=0 if st.session_state.theme == "Light" else 1)
+# Sidebar
+with st.sidebar:
+    st.header("Configuration")
+    
+    # Theme toggle
+    theme_col1, theme_col2 = st.columns([3, 1])
+    with theme_col1:
+        theme = st.selectbox("Theme", ["Light", "Dark"], index=0 if st.session_state.theme == "Light" else 1, label_visibility="collapsed")
+    with theme_col2:
+        if st.button("🌓"):
+            st.session_state.theme = "Dark" if st.session_state.theme == "Light" else "Light"
+            st.rerun()
+    
     if theme != st.session_state.theme:
         st.session_state.theme = theme
         st.rerun()
-
-st.markdown("---")
-
-col1, col2, col3 = st.columns([2, 1, 1])
-
-with col1:
-    sequence_input = st.text_input("Memory Access Sequence (comma-separated)", value=st.session_state.sequence_input, key='seq_input')
-    st.session_state.sequence_input = sequence_input
-
-with col2:
-    animation_mode = st.selectbox("Mode", ["Auto-Run", "Step-by-Step"])
-
-with col3:
+    
+    st.markdown("---")
+    
+    mapping_type = st.selectbox(
+        "Mapping Type",
+        ["Direct Mapping", "Fully Associative", "Set Associative"]
+    )
+    
+    cache_size = st.number_input("Cache Size (lines)", min_value=2, max_value=32, value=8, step=1)
+    
+    num_sets = None
+    if mapping_type == "Set Associative":
+        num_sets = st.number_input("Number of Sets", min_value=2, max_value=cache_size//2, value=4, step=1)
+        st.info(f"Lines per set: {cache_size // num_sets}")
+    
+    replacement_policy = st.selectbox(
+        "Replacement Policy",
+        ["FIFO", "LRU"]
+    ) if mapping_type != "Direct Mapping" else "N/A"
+    
+    st.markdown("---")
+    st.subheader("Memory Access Sequence")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Example 1"):
+            st.session_state.sequence_input = "1,2,3,4,1,2,5,1,2,3,4,5"
+    with col2:
+        if st.button("Random"):
+            st.session_state.sequence_input = ",".join([str(random.randint(0, 15)) for _ in range(12)])
+    
+    sequence_input = st.text_area(
+        "Enter sequence (comma-separated)",
+        value=st.session_state.get('sequence_input', "1,2,3,4,1,2,5,1,2,3,4,5"),
+        height=100,
+        key='sequence_input'
+    )
+    
+    st.markdown("---")
+    st.subheader("Controls")
+    
+    animation_mode = st.radio(
+        "Animation Mode",
+        ["Auto-Run", "Step-by-Step"],
+        horizontal=True
+    )
+    
     if animation_mode == "Auto-Run":
-        speed = st.slider("Speed (s)", 0.1, 2.0, 0.5, 0.1)
+        speed = st.slider("Animation Speed (seconds)", 0.1, 2.0, 0.5, 0.1)
     else:
         speed = 0
-        st.markdown("<div style='height: 58px;'></div>", unsafe_allow_html=True)
-
-st.markdown("---")
-
-col1, col2, col3, col4, col5 = st.columns(5)
-
-with col1:
-    if st.button("▶ Start", use_container_width=True, type="primary"):
-        try:
-            st.session_state.sequence = [int(x.strip()) for x in sequence_input.split(",") if x.strip()]
-            
-            if mapping_type == "Direct Mapping":
-                st.session_state.simulator = DirectMappedCache(cache_size, "N/A")
-            elif mapping_type == "Fully Associative":
-                st.session_state.simulator = FullyAssociativeCache(cache_size, replacement_policy)
-            else:
-                st.session_state.simulator = SetAssociativeCache(cache_size, num_sets, replacement_policy)
-            
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Start", use_container_width=True):
+            try:
+                st.session_state.sequence = [int(x.strip()) for x in sequence_input.split(",") if x.strip()]
+                
+                if mapping_type == "Direct Mapping":
+                    st.session_state.simulator = DirectMappedCache(cache_size, "N/A")
+                elif mapping_type == "Fully Associative":
+                    st.session_state.simulator = FullyAssociativeCache(cache_size, replacement_policy)
+                else:
+                    st.session_state.simulator = SetAssociativeCache(cache_size, num_sets, replacement_policy)
+                
+                st.session_state.current_step = 0
+                st.session_state.running = animation_mode == "Auto-Run"
+                st.session_state.animation_mode = animation_mode
+                st.session_state.step_processed = False
+                st.rerun()
+            except:
+                st.error("Invalid sequence format")
+    
+    with col2:
+        if st.button("Reset", use_container_width=True):
+            st.session_state.simulator = None
             st.session_state.current_step = 0
-            st.session_state.running = animation_mode == "Auto-Run"
-            st.session_state.animation_mode = animation_mode
+            st.session_state.running = False
             st.session_state.step_processed = False
             st.rerun()
-        except:
-            st.error("Invalid sequence format")
+    
+    if st.session_state.simulator and st.session_state.current_step < len(st.session_state.sequence):
+        if st.session_state.animation_mode == "Step-by-Step":
+            if st.button("Next Step", use_container_width=True, type="primary"):
+                st.session_state.step_processed = False
+                st.rerun()
 
-with col2:
-    if st.session_state.simulator and st.session_state.animation_mode == "Step-by-Step" and st.session_state.current_step < len(st.session_state.sequence):
-        if st.button("⏭ Next Step", use_container_width=True):
-            st.session_state.step_processed = False
-            st.rerun()
-
-with col3:
-    if st.button("🔄 Reset", use_container_width=True):
-        st.session_state.simulator = None
-        st.session_state.current_step = 0
-        st.session_state.running = False
-        st.session_state.step_processed = False
-        st.rerun()
-
-with col4:
-    if st.button("📋 Example", use_container_width=True):
-        st.session_state.sequence_input = "1,2,3,4,1,2,5,1,2,3,4,5"
-        st.rerun()
-
-with col5:
-    if st.button("🎲 Random", use_container_width=True):
-        st.session_state.sequence_input = ",".join([str(random.randint(0, 15)) for _ in range(12)])
-        st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Main Content
+# Main area
 if st.session_state.simulator is None:
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.info("Configure settings above and click Start to begin simulation")
+    st.info("Configure settings in the sidebar and click Start to begin simulation")
+    
+    # Educational content
+    st.markdown("### Cache Mapping Techniques")
     
     col1, col2, col3 = st.columns(3)
+    
     with col1:
         st.markdown("#### Direct Mapping")
-        st.markdown("• Each block maps to one cache line<br>• Formula: `index = block % cache_size`<br>• Simple but prone to conflicts", unsafe_allow_html=True)
+        st.markdown("""
+        - Each block maps to exactly one cache line
+        - Formula: `index = block % cache_size`
+        - Simple but prone to conflicts
+        """)
+    
     with col2:
         st.markdown("#### Fully Associative")
-        st.markdown("• Block can go in any cache line<br>• Most flexible<br>• Requires replacement policy", unsafe_allow_html=True)
+        st.markdown("""
+        - Block can go in any cache line
+        - Most flexible
+        - Requires replacement policy
+        """)
+    
     with col3:
         st.markdown("#### Set Associative")
-        st.markdown("• Compromise between both<br>• Block maps to a set<br>• Formula: `set = block % num_sets`", unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("""
+        - Compromise between both
+        - Block maps to a set, any line in set
+        - Formula: `set = block % num_sets`
+        """)
 
 else:
-    # Stats Cards
+    # Stats
     total_accesses = st.session_state.current_step
     hit_ratio = (st.session_state.simulator.hits / total_accesses * 100) if total_accesses > 0 else 0
+    miss_ratio = 100 - hit_ratio
     
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.markdown(f'''<div class="stat-card">
-            <h3>Total Accesses</h3>
-            <div class="value">{total_accesses}</div>
-        </div>''', unsafe_allow_html=True)
-    
+        st.metric("Total Accesses", total_accesses)
     with col2:
-        st.markdown(f'''<div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-            <h3>Hits</h3>
-            <div class="value">{st.session_state.simulator.hits}</div>
-        </div>''', unsafe_allow_html=True)
-    
+        st.metric("Hits", st.session_state.simulator.hits, delta=None, delta_color="normal")
     with col3:
-        st.markdown(f'''<div class="stat-card" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);">
-            <h3>Misses</h3>
-            <div class="value">{st.session_state.simulator.misses}</div>
-        </div>''', unsafe_allow_html=True)
-    
+        st.metric("Misses", st.session_state.simulator.misses, delta=None, delta_color="inverse")
     with col4:
-        st.markdown(f'''<div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-            <h3>Hit Ratio</h3>
-            <div class="value">{hit_ratio:.1f}%</div>
-        </div>''', unsafe_allow_html=True)
+        st.metric("Hit Ratio", f"{hit_ratio:.1f}%")
     
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Sequence Visualization
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown("### Memory Access Sequence")
-    
-    sequence_html = ""
-    for i, block in enumerate(st.session_state.sequence):
-        if i < st.session_state.current_step:
-            css_class = "sequence-block processed"
-        elif i == st.session_state.current_step:
-            css_class = "sequence-block active"
-        else:
-            css_class = "sequence-block"
-        sequence_html += f'<span class="{css_class}">{block}</span>'
-    
-    st.markdown(f'<div style="text-align: center; margin: 20px 0;">{sequence_html}</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("---")
     
     # Process current step
     if st.session_state.current_step < len(st.session_state.sequence) and not st.session_state.step_processed:
@@ -505,11 +451,13 @@ else:
         is_hit, cache_index, explanation = st.session_state.simulator.access(block)
         st.session_state.step_processed = True
         
-        # Explanation
-        st.markdown(f'<div class="explanation-box">{explanation}</div>', unsafe_allow_html=True)
+        # Show current access
+        st.markdown(f"### Step {st.session_state.current_step + 1}: Accessing Block **{block}**")
         
-        # Cache Visualization
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+        # Explanation
+        st.markdown(f'<div class="formula-box">{explanation.replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
+        
+        # Visualize cache
         st.markdown("### Cache State")
         
         if mapping_type == "Direct Mapping":
@@ -550,7 +498,7 @@ else:
         
         else:  # Set Associative
             for set_idx in range(num_sets):
-                st.markdown(f'<div class="set-header">Set {set_idx}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="set-label">Set {set_idx}</div>', unsafe_allow_html=True)
                 cols = st.columns(cache_size // num_sets)
                 for line in range(cache_size // num_sets):
                     with cols[line]:
@@ -568,9 +516,7 @@ else:
                                 <div class="block-content">Empty</div>
                             </div>''', unsafe_allow_html=True)
         
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Auto-advance
+        # Auto-advance for Auto-Run mode
         if st.session_state.animation_mode == "Auto-Run":
             time.sleep(speed)
             st.session_state.current_step += 1
@@ -580,15 +526,16 @@ else:
                 st.rerun()
             else:
                 st.session_state.running = False
-                st.success("✅ Simulation Complete!")
+                st.success("Simulation Complete!")
                 st.balloons()
         else:
+            # Step-by-step mode - increment after display
             st.session_state.current_step += 1
     
     elif st.session_state.current_step >= len(st.session_state.sequence):
-        st.success("✅ Simulation Complete!")
+        st.success("Simulation Complete!")
         
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+        # Final stats
         st.markdown("### Final Statistics")
         col1, col2 = st.columns(2)
         with col1:
@@ -596,5 +543,4 @@ else:
             st.metric("Hit Ratio", f"{hit_ratio:.2f}%")
         with col2:
             st.metric("Total Misses", st.session_state.simulator.misses)
-            st.metric("Miss Ratio", f"{100-hit_ratio:.2f}%")
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.metric("Miss Ratio", f"{miss_ratio:.2f}%")
