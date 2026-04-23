@@ -1,6 +1,12 @@
-node_modules
-*.env
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+.env
+*.log
 .DS_Store
-dist
-build
-.vercel
+.streamlit/
