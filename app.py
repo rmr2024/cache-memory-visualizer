@@ -34,6 +34,8 @@ def get_theme_css(theme):
         formula_text = "#a8d5ff"
         set_label_bg = "#262730"
         set_label_border = "#4a4a4a"
+        sidebar_bg = "#262730"
+        sidebar_text = "#fafafa"
     else:  # Light
         bg_color = "#ffffff"
         text_color = "#262730"
@@ -44,11 +46,27 @@ def get_theme_css(theme):
         formula_text = "#0d47a1"
         set_label_bg = "#e9ecef"
         set_label_border = "#adb5bd"
+        sidebar_bg = "#f8f9fa"
+        sidebar_text = "#262730"
     
     return f"""
     <style>
         .stApp {{
             background-color: {bg_color} !important;
+        }}
+        section[data-testid="stSidebar"] {{
+            background-color: {sidebar_bg} !important;
+        }}
+        section[data-testid="stSidebar"] * {{
+            color: {sidebar_text} !important;
+        }}
+        section[data-testid="stSidebar"] .stMarkdown {{
+            color: {sidebar_text} !important;
+        }}
+        section[data-testid="stSidebar"] h1, 
+        section[data-testid="stSidebar"] h2, 
+        section[data-testid="stSidebar"] h3 {{
+            color: {heading_color} !important;
         }}
         .cache-cell {{
             padding: 20px 10px;
