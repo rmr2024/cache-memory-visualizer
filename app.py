@@ -4,7 +4,12 @@ import random
 from typing import List, Tuple, Dict
 
 # Page config
-st.set_page_config(page_title="Cache Memory Visualizer", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="Cache Memory Visualizer", 
+    layout="wide", 
+    initial_sidebar_state="expanded",
+    page_icon="🧠"
+)
 
 # Initialize session state first
 if 'simulator' not in st.session_state:
