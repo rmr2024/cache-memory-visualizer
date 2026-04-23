@@ -142,33 +142,50 @@ def get_theme_css(theme):
             border: none !important;
         }}
         .cache-cell {{
-            padding: 20px 10px;
-            border-radius: 8px;
+            background-color: {metric_bg};
+            border: 3px solid {metric_border};
+            border-radius: 12px;
+            padding: 16px 12px;
             text-align: center;
-            margin: 8px 2px;
-            font-weight: 600;
-            font-size: 16px;
-            min-height: 80px;
+            margin: 8px 0;
+            min-height: 70px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }}
-        .hit {{ 
-            background-color: #d4edda !important; 
+        .cache-cell:hover {{
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }}
+        .hit {{
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%) !important;
             border: 3px solid #28a745 !important;
             color: #155724 !important;
+            animation: pulse 0.5s ease;
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.6) !important;
         }}
-        .miss {{ 
-            background-color: #f8d7da !important; 
+        .miss {{
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%) !important;
             border: 3px solid #dc3545 !important;
             color: #721c24 !important;
+            animation: shake 0.5s ease;
+            box-shadow: 0 0 20px rgba(220, 53, 69, 0.6) !important;
         }}
-        .empty {{ 
-            background-color: #f8f9fa !important; 
-            border: 2px dashed #dee2e6 !important;
+        .empty {{
+            background-color: {metric_bg} !important;
+            border: 2px dashed {metric_border} !important;
             color: #6c757d !important;
+        }}
+        .spotlight {{
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8) !important;
+            border: 3px solid #ffd700 !important;
+            animation: glow 1s ease-in-out infinite;
+        }}
+        @keyframes glow {{
+            0%, 100% {{ box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }}
+            50% {{ box-shadow: 0 0 40px rgba(255, 215, 0, 1); }}
         }}
         .formula-box {{
             padding: 20px;
@@ -246,26 +263,11 @@ def get_theme_css(theme):
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             border: 3px solid #f39c12;
             color: #000;
-            transform: scale(1.1);
+            transform: scale(1.05);
             box-shadow: 0 4px 12px rgba(243,156,18,0.5);
         }}
         .memory-block.processed {{
             opacity: 0.4;
-        }}
-        .arrow-container {{
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 0;
-        }}
-        .arrow {{
-            font-size: 48px;
-            color: #f39c12;
-            animation: bounce 1s infinite;
-        }}
-        @keyframes bounce {{
-            0%, 100% {{ transform: translateX(0); }}
-            50% {{ transform: translateX(10px); }}
         }}
     </style>
     """
@@ -579,8 +581,8 @@ else:
         is_hit, cache_index, explanation = st.session_state.simulator.access(block)
         st.session_state.step_processed = True
         
-        # Create layout with memory blocks on left, arrow in middle, cache on right
-        col_left, col_arrow, col_right = st.columns([1, 0.5, 3])
+        # Create layout with memory blocks on left, cache on right
+        col_left, col_right = st.columns([1, 3])
         
         with col_left:
             st.markdown("### Memory Blocks")
@@ -593,10 +595,6 @@ else:
                     css_class = "memory-block"
                 st.markdown(f'<div class="{css_class}">Block {mem_block}</div>', unsafe_allow_html=True)
         
-        with col_arrow:
-            st.markdown("<div style='height: 150px;'></div>", unsafe_allow_html=True)
-            st.markdown('<div class="arrow-container"><div class="arrow">→</div></div>', unsafe_allow_html=True)
-        
         with col_right:
             st.markdown("### Cache State")
             
@@ -604,60 +602,56 @@ else:
             st.markdown(f'<div class="formula-box">{explanation.replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
             
             if mapping_type == "Direct Mapping":
-                num_cols = min(cache_size, 4)
-                cols = st.columns(num_cols)
                 for i in range(cache_size):
-                    with cols[i % num_cols]:
-                        if i in st.session_state.simulator.cache:
-                            block_val = st.session_state.simulator.cache[i]
-                            css_class = "hit" if i == cache_index and is_hit else "miss" if i == cache_index else "empty"
-                            st.markdown(f'''<div class="cache-cell {css_class}">
-                                <div class="block-label">Index {i}</div>
-                                <div class="block-content">Block {block_val}</div>
-                            </div>''', unsafe_allow_html=True)
-                        else:
-                            st.markdown(f'''<div class="cache-cell empty">
-                                <div class="block-label">Index {i}</div>
-                                <div class="block-content">Empty</div>
-                            </div>''', unsafe_allow_html=True)
+                    if i in st.session_state.simulator.cache:
+                        block_val = st.session_state.simulator.cache[i]
+                        css_class = "cache-cell hit" if i == cache_index and is_hit else "cache-cell miss" if i == cache_index else "cache-cell spotlight" if i == cache_index else "cache-cell"
+                        st.markdown(f'''<div class="{css_class}">
+                            <div class="block-label">Index {i}</div>
+                            <div class="block-content">Block {block_val}</div>
+                        </div>''', unsafe_allow_html=True)
+                    else:
+                        css_class = "cache-cell empty spotlight" if i == cache_index else "cache-cell empty"
+                        st.markdown(f'''<div class="{css_class}">
+                            <div class="block-label">Index {i}</div>
+                            <div class="block-content">Empty</div>
+                        </div>''', unsafe_allow_html=True)
             
             elif mapping_type == "Fully Associative":
-                num_cols = min(cache_size, 4)
-                cols = st.columns(num_cols)
                 for i in range(cache_size):
-                    with cols[i % num_cols]:
-                        if i in st.session_state.simulator.cache:
-                            block_val = st.session_state.simulator.cache[i]
-                            css_class = "hit" if i == cache_index and is_hit else "miss" if i == cache_index else "empty"
-                            st.markdown(f'''<div class="cache-cell {css_class}">
-                                <div class="block-label">Line {i}</div>
-                                <div class="block-content">Block {block_val}</div>
-                            </div>''', unsafe_allow_html=True)
-                        else:
-                            st.markdown(f'''<div class="cache-cell empty">
-                                <div class="block-label">Line {i}</div>
-                                <div class="block-content">Empty</div>
-                            </div>''', unsafe_allow_html=True)
+                    if i in st.session_state.simulator.cache:
+                        block_val = st.session_state.simulator.cache[i]
+                        css_class = "cache-cell hit" if i == cache_index and is_hit else "cache-cell miss" if i == cache_index else "cache-cell spotlight" if i == cache_index else "cache-cell"
+                        st.markdown(f'''<div class="{css_class}">
+                            <div class="block-label">Line {i}</div>
+                            <div class="block-content">Block {block_val}</div>
+                        </div>''', unsafe_allow_html=True)
+                    else:
+                        css_class = "cache-cell empty spotlight" if i == cache_index else "cache-cell empty"
+                        st.markdown(f'''<div class="{css_class}">
+                            <div class="block-label">Line {i}</div>
+                            <div class="block-content">Empty</div>
+                        </div>''', unsafe_allow_html=True)
             
             else:  # Set Associative
                 for set_idx in range(num_sets):
                     st.markdown(f'<div class="set-label">Set {set_idx}</div>', unsafe_allow_html=True)
-                    cols = st.columns(cache_size // num_sets)
                     for line in range(cache_size // num_sets):
-                        with cols[line]:
-                            if line in st.session_state.simulator.sets[set_idx]:
-                                block_val = st.session_state.simulator.sets[set_idx][line]
-                                global_idx = set_idx * (cache_size // num_sets) + line
-                                css_class = "hit" if global_idx == cache_index and is_hit else "miss" if global_idx == cache_index else "empty"
-                                st.markdown(f'''<div class="cache-cell {css_class}">
-                                    <div class="block-label">Line {line}</div>
-                                    <div class="block-content">Block {block_val}</div>
-                                </div>''', unsafe_allow_html=True)
-                            else:
-                                st.markdown(f'''<div class="cache-cell empty">
-                                    <div class="block-label">Line {line}</div>
-                                    <div class="block-content">Empty</div>
-                                </div>''', unsafe_allow_html=True)
+                        if line in st.session_state.simulator.sets[set_idx]:
+                            block_val = st.session_state.simulator.sets[set_idx][line]
+                            global_idx = set_idx * (cache_size // num_sets) + line
+                            css_class = "cache-cell hit" if global_idx == cache_index and is_hit else "cache-cell miss" if global_idx == cache_index else "cache-cell spotlight" if global_idx == cache_index else "cache-cell"
+                            st.markdown(f'''<div class="{css_class}">
+                                <div class="block-label">Line {line}</div>
+                                <div class="block-content">Block {block_val}</div>
+                            </div>''', unsafe_allow_html=True)
+                        else:
+                            global_idx = set_idx * (cache_size // num_sets) + line
+                            css_class = "cache-cell empty spotlight" if global_idx == cache_index else "cache-cell empty"
+                            st.markdown(f'''<div class="{css_class}">
+                                <div class="block-label">Line {line}</div>
+                                <div class="block-content">Empty</div>
+                            </div>''', unsafe_allow_html=True)
         
         # Auto-advance for Auto-Run mode
         if st.session_state.animation_mode == "Auto-Run":
