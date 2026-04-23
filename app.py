@@ -115,6 +115,27 @@ def get_theme_css(theme):
         section[data-testid="stSidebar"] .stSlider label {{
             color: {sidebar_text} !important;
         }}
+        section[data-testid="stSidebar"] button {{
+            background-color: {metric_bg} !important;
+            color: {text_color} !important;
+            border-color: {metric_border} !important;
+        }}
+        section[data-testid="stSidebar"] button:hover {{
+            border-color: {heading_color} !important;
+        }}
+        .stButton button {{
+            background-color: {metric_bg} !important;
+            color: {text_color} !important;
+            border: 1px solid {metric_border} !important;
+        }}
+        .stButton button:hover {{
+            border-color: {heading_color} !important;
+        }}
+        .stButton button[kind="primary"] {{
+            background-color: #667eea !important;
+            color: white !important;
+            border: none !important;
+        }}
         .cache-cell {{
             padding: 20px 10px;
             border-radius: 8px;
