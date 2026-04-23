@@ -78,7 +78,25 @@ def get_theme_css(theme):
             color: {text_color} !important;
             border-color: {metric_border} !important;
         }}
-        section[data-testid="stSidebar"] select {{
+        section[data-testid="stSidebar"] [data-baseweb="select"] {{
+            background-color: {metric_bg} !important;
+        }}
+        section[data-testid="stSidebar"] [data-baseweb="select"] > div {{
+            background-color: {metric_bg} !important;
+            color: {text_color} !important;
+            border-color: {metric_border} !important;
+        }}
+        section[data-testid="stSidebar"] [data-baseweb="input"] {{
+            background-color: {metric_bg} !important;
+        }}
+        section[data-testid="stSidebar"] [data-baseweb="input"] > div {{
+            background-color: {metric_bg} !important;
+            color: {text_color} !important;
+        }}
+        section[data-testid="stSidebar"] [data-baseweb="base-input"] {{
+            background-color: {metric_bg} !important;
+        }}
+        section[data-testid="stSidebar"] [data-baseweb="base-input"] input {{
             background-color: {metric_bg} !important;
             color: {text_color} !important;
         }}
@@ -89,6 +107,12 @@ def get_theme_css(theme):
             color: {sidebar_text} !important;
         }}
         section[data-testid="stSidebar"] .stTextArea label {{
+            color: {sidebar_text} !important;
+        }}
+        section[data-testid="stSidebar"] .stRadio label {{
+            color: {sidebar_text} !important;
+        }}
+        section[data-testid="stSidebar"] .stSlider label {{
             color: {sidebar_text} !important;
         }}
         .cache-cell {{
